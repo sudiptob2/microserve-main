@@ -22,7 +22,7 @@ class Product(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     title = db.Column(db.String(200))
-    image = db.Column(db.String(20000))
+    image = db.Column(db.TEXT(20000000))
     likes = db.Column(db.Integer, default=0)
 
 
