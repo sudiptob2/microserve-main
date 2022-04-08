@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from flask import Flask, jsonify, abort
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import UniqueConstraint
 
 from producer import publish
 
@@ -41,20 +40,16 @@ def index():
 @app.route('/api/products/<int:id>/like', methods=['POST'])
 def like(id):
     # define a static user id for demo
-    user_id = 1
-
     try:
-        productUser = ProductUser(user_id=user_id, product_id=id)
-        db.session.add(productUser)
+        product = Product.query.get(id)
+        product.likes += 1
         db.session.commit()
 
         publish('product_liked', id)
     except:
-        abort(400, 'You already liked this product')
+        abort(400, 'bad request')
 
-    return jsonify({
-        'message': 'success'
-    })
+    return jsonify(product)
 
 
 if __name__ == '__main__':
