@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 
 from flask import Flask, jsonify, abort
@@ -8,7 +9,8 @@ from producer import publish
 
 app = Flask(__name__)
 CORS(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql://root:root@db/main'
+SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 
 
