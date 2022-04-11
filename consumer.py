@@ -1,17 +1,13 @@
 import json
 import os
+import time
+
 
 import pika
 
 from main import Product, db
 
-RABBIT_ENDPOINT = os.getenv('RABBIT_ENDPOINT')
-params = pika.URLParameters(RABBIT_ENDPOINT)
-connection = pika.BlockingConnection(params)
-
-channel = connection.channel()
-
-channel.queue_declare(queue='main')
+RABBIT_ENDPOINT = os.environ['RABBIT_ENDPOINT']
 
 
 def callback(ch, method, properties, body):
@@ -39,10 +35,32 @@ def callback(ch, method, properties, body):
         print('Product Deleted')
 
 
-channel.basic_consume(queue='main', on_message_callback=callback, auto_ack=True)
+class Consumer:
+    """Implement the consumer script."""
 
-print('Started Consuming in main...')
+    def start(self, connection):
+        # if not self.connection or self.connection.is_closed:
+        #     self.connection = pika.BlockingConnection(self.params)
+        channel = connection.channel()
+        channel.queue_declare(queue='main')
+        channel.basic_consume(
+            queue='main',
+            on_message_callback=callback,
+            auto_ack=True,
+        )
+        print('Started Consuming in queue: main...')
+        channel.start_consuming()
+        channel.close()
 
-channel.start_consuming()
 
-channel.close()
+print('Starting the connection to message queue.....')
+consumer = Consumer()
+params = pika.URLParameters(RABBIT_ENDPOINT)
+while True:
+    try:
+        connection = pika.BlockingConnection(params)
+    except:
+        print('could not connect to the host: {0}. retrying in 1 sec...'.format(RABBIT_ENDPOINT))
+        time.sleep(1)
+        continue
+    consumer.start(connection)

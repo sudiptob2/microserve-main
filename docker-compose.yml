@@ -8,14 +8,16 @@ services:
       - .env
     command: 'bash scripts/entrypoint.sh'
     ports:
-      - 8001:5000
+      - "8001:5000"
     volumes:
       - .:/app
     depends_on:
       - db
+      - rabbit
     restart: unless-stopped
     networks:
       - main
+
 
   queue:
     build:
@@ -28,9 +30,11 @@ services:
     command: 'python -u consumer.py'
     depends_on:
       - db
+      - rabbit
     restart: unless-stopped
     networks:
       - main
+
 
   db:
     image: mysql:5.7.22
@@ -40,7 +44,18 @@ services:
     volumes:
       - msql-data:/var/lib/mysql
     ports:
-      - 33067:3306
+      - "33067:3306"
+    networks:
+      - main
+
+
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:3.10.0-rc.3-management
+    env_file: .env
+    ports:
+      - "5679:5672" # we forward this port because it's useful for debugging
+      - "15679:15672" # here, we can access rabbitmq management plugin
     networks:
       - main
 

@@ -5,7 +5,7 @@ from flask import Flask, jsonify, abort
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
-from producer import publish
+from producer import Producer
 
 app = Flask(__name__)
 CORS(app)
@@ -42,12 +42,13 @@ def index():
 @app.route('/api/products/<int:id>/like', methods=['POST'])
 def like(id):
     # define a static user id for demo
+    producer = Producer()
     try:
         product = Product.query.get(id)
         product.likes += 1
         db.session.commit()
 
-        publish('product_liked', id)
+        producer.publish('product_liked', id)
     except:
         abort(400, 'bad request')
 
